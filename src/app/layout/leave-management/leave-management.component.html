@@ -18,6 +18,10 @@
                 [class]="activeTab === 'holidays' ? 'border-emerald-500 text-emerald-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'">
                 Holidays
             </button>
+            <button (click)="activeTab = 'departments'"
+                [class]="activeTab === 'departments' ? 'border-emerald-500 text-emerald-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'">
+                Departments
+            </button>
         </nav>
     </div>
 
@@ -75,6 +79,8 @@
                                 <div class="text-sm text-gray-900">{{ balance.validUntil | date }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button (click)="openViewDetailsModal(balance)"
+                                    class="text-blue-600 hover:text-blue-900 mr-4">View Details</button>
                                 <button (click)="openEditModal(balance)"
                                     class="text-emerald-600 hover:text-emerald-900 mr-4">Edit</button>
                                 <button (click)="deleteBalance(balance.id)"
@@ -157,6 +163,8 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button (click)="openEditLeaveTypeModal(type)"
+                                    class="text-emerald-600 hover:text-emerald-900 mr-4">Edit</button>
                                 <button (click)="deleteLeaveType(type.id)"
                                     class="text-red-600 hover:text-red-900">Delete</button>
                             </td>
@@ -222,6 +230,68 @@
         <!-- Empty State -->
         <div *ngIf="holidays.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
             <p class="text-gray-500">No holidays found</p>
+        </div>
+    </div>
+
+    <!-- Departments Tab -->
+    <div *ngIf="activeTab === 'departments'">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Departments</h2>
+            <button (click)="isModalOpen = true"
+                class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg">
+                Add Department
+            </button>
+        </div>
+
+        <!-- Departments Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Members</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Created At</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let department of departments">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ department.name }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">{{ department.description }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">
+                                    <span class="text-gray-500">{{ department.users?.length || 0 }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ department.createdAt | date:'mediumDate' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button (click)="openEditDepartmentModal(department)"
+                                    class="text-emerald-600 hover:text-emerald-900 mr-4">Edit</button>
+                                <button (click)="deleteDepartment(department.id)"
+                                    class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="departments.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+            <p class="text-gray-500">No departments found</p>
         </div>
     </div>
 
@@ -381,6 +451,204 @@
                     <button type="submit" [disabled]="isSubmitting || !newHoliday.name || !newHoliday.date"
                         class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
                         {{ isSubmitting ? 'Creating...' : 'Create' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Leave Type Modal -->
+    <div *ngIf="isModalOpen && activeTab === 'types' && selectedLeaveType"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Leave Type</h3>
+            <form (ngSubmit)="updateLeaveType(selectedLeaveType)" #leaveTypeForm="ngForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Name</label>
+                    <input type="text" id="name" [(ngModel)]="selectedLeaveType.name" name="name"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="description">Description</label>
+                    <textarea id="description" [(ngModel)]="selectedLeaveType.description" name="description"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        required></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="maxDays">Max Days <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" id="maxDays" [(ngModel)]="selectedLeaveType.maxDays" name="maxDays" min="1"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        required>
+                    <div *ngIf="leaveTypeForm.submitted && !selectedLeaveType.maxDays"
+                        class="text-red-500 text-sm mt-1">
+                        Max days is required
+                    </div>
+                    <div *ngIf="selectedLeaveType.maxDays < 1" class="text-red-500 text-sm mt-1">
+                        Max days must be greater than 0
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" [(ngModel)]="selectedLeaveType.isPaid" name="isPaid"
+                            class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="ml-2 text-sm text-gray-700">Paid Leave</span>
+                    </label>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" [(ngModel)]="selectedLeaveType.requiresApproval" name="requiresApproval"
+                            class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="ml-2 text-sm text-gray-700">Requires Approval</span>
+                    </label>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" [(ngModel)]="selectedLeaveType.isAnnualLeave" name="isAnnualLeave"
+                            class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="ml-2 text-sm text-gray-700">Annual Leave</span>
+                    </label>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" (click)="closeModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">
+                        Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Leave Balance Details Modal -->
+    <div *ngIf="isModalOpen && activeTab === 'balances' && isViewingDetails"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Leave Balance Details</h3>
+            <div class="space-y-4">
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">Balance Information</h4>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="min-w-[200px]">
+                            <p class="text-xs text-gray-500">Current Balance</p>
+                            <p class="text-sm font-medium text-gray-900">{{ selectedBalance?.balance || 0 }} days</p>
+                        </div>
+                        <div class="min-w-[200px]">
+                            <p class="text-xs text-gray-500">Valid Until</p>
+                            <p class="text-sm font-medium text-gray-900">{{ selectedBalance?.validUntil ?
+                                (selectedBalance.validUntil | date:'mediumDate') : 'None' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">Accrual Information</h4>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="min-w-[200px]">
+                            <p class="text-xs text-gray-500">Last Accrual</p>
+                            <p class="text-sm font-medium text-gray-900">{{ selectedBalance?.lastAccrualDate ?
+                                (selectedBalance.lastAccrualDate | date:'mediumDate') : 'None' }}</p>
+                        </div>
+                        <div class="min-w-[200px]">
+                            <p class="text-xs text-gray-500">Yearly Accrued</p>
+                            <p class="text-sm font-medium text-gray-900">{{ selectedBalance?.yearlyAccruedDays || 0 }}
+                                days</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">Additional Information</h4>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="min-w-[200px]">
+                            <p class="text-xs text-gray-500">Carried Forward</p>
+                            <p class="text-sm font-medium text-gray-900">{{ selectedBalance?.carriedForwardDays || 0 }}
+                                days</p>
+                        </div>
+                        <div class="min-w-[200px]">
+                            <p class="text-xs text-gray-500">Expired Days</p>
+                            <p class="text-sm font-medium text-gray-900">{{ selectedBalance?.expiredDays || 0 }} days
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button (click)="closeModal()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Department Modal -->
+    <div *ngIf="isModalOpen && activeTab === 'departments'"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ selectedDepartment ? 'Edit' : 'Add' }} Department</h3>
+            <form (ngSubmit)="selectedDepartment ? updateDepartment(selectedDepartment) : createDepartment()">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="departmentName">Name <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" id="departmentName" [(ngModel)]="newDepartment.name" name="name"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2"
+                        for="departmentDescription">Description</label>
+                    <textarea id="departmentDescription" [(ngModel)]="newDepartment.description" name="description"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="departmentUsers">Members</label>
+                    <div class="relative">
+                        <div class="flex flex-wrap gap-2 p-2 border rounded-lg min-h-[42px] bg-white">
+                            <div *ngFor="let userId of newDepartment.userIds"
+                                class="flex items-center bg-emerald-100 text-emerald-800 rounded-full px-3 py-1 text-sm">
+                                {{ getUserName(userId) }}
+                                <button type="button" (click)="removeUser(userId)"
+                                    class="ml-2 text-emerald-600 hover:text-emerald-800">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <input type="text" [(ngModel)]="searchTerm" name="userSearch"
+                                (ngModelChange)="filterUsers()" (focus)="isDropdownOpen = true"
+                                placeholder="Search users..." class="flex-1 min-w-[120px] outline-none bg-transparent">
+                        </div>
+
+                        <div *ngIf="isDropdownOpen"
+                            class="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div *ngFor="let user of filteredUsers" (click)="toggleUser(user.id)"
+                                class="px-4 py-2 hover:bg-emerald-50 cursor-pointer flex items-center">
+                                <input type="checkbox" [checked]="newDepartment.userIds?.includes(user.id)"
+                                    class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
+                                <span class="ml-2 text-sm text-gray-700">
+                                    {{ user.firstName }} {{ user.lastName }}
+                                </span>
+                            </div>
+                            <div *ngIf="filteredUsers.length === 0" class="px-4 py-2 text-sm text-gray-500">
+                                No users found
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" (click)="closeModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        Cancel
+                    </button>
+                    <button type="submit" [disabled]="isSubmitting"
+                        class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                        {{ isSubmitting ? 'Saving...' : 'Save' }}
                     </button>
                 </div>
             </form>

@@ -1,0 +1,49 @@
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Team Calendar</h1>
+            <p class="text-gray-600 mt-1">View department leaves and holidays</p>
+        </div>
+    </div>
+
+    <!-- Department Selection -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700" for="department">Select Department</label>
+            <select id="department" [(ngModel)]="selectedDepartment" name="department"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                (change)="onDepartmentChange()">
+                <option value="">Select Department</option>
+                <option *ngFor="let dept of departments" [value]="dept.id">
+                    {{ dept.name }}
+                </option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <full-calendar [options]="calendarOptions"></full-calendar>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-6 flex flex-wrap gap-4">
+        <div class="flex items-center">
+            <div class="w-4 h-4 rounded-full bg-emerald-500 mr-2"></div>
+            <span class="text-sm text-gray-600">Approved Leave</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-4 h-4 rounded-full bg-yellow-500 mr-2"></div>
+            <span class="text-sm text-gray-600">Pending Leave</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-4 h-4 rounded-full bg-red-500 mr-2"></div>
+            <span class="text-sm text-gray-600">Rejected Leave</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-4 h-4 rounded-full bg-orange-500 mr-2"></div>
+            <span class="text-sm text-gray-600">Public Holiday</span>
+        </div>
+    </div>
+</div>

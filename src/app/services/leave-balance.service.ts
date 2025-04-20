@@ -31,6 +31,10 @@ export class LeaveBalanceService {
         return this.http.post<any>(this.apiUrl + '/api/leaves/types/leave-types', payload, this.httpOptions);
     }
 
+    updateLeaveType(id: number, payload: any): Observable<any> {
+        return this.http.put<any>(this.apiUrl + '/api/leaves/types/leave-types/' + id, payload, this.httpOptions);
+    }
+
     deleteLeaveType(id: number): Observable<any> {
         return this.http.delete<any>(this.apiUrl + '/api/leaves/types/leave-types/' + id, this.httpOptions);
     }
@@ -45,6 +49,23 @@ export class LeaveBalanceService {
 
     createLeaveBalance(payload: any): Observable<any> {
         return this.http.post<any>(this.apiUrl + '/api/leave-balances', payload, this.httpOptions);
+    }
+
+    // Departments
+    getDepartments(): Observable<any[]> {
+        return this.http.get<any[]>(this.apiUrl + '/api/departments', this.httpOptions);
+    }
+
+    createDepartment(payload: any): Observable<any> {
+        return this.http.post<any>(this.apiUrl + '/api/departments', payload, this.httpOptions);
+    }
+
+    updateDepartment(id: number, payload: any): Observable<any> {
+        return this.http.put<any>(this.apiUrl + '/api/departments/' + id, payload, this.httpOptions);
+    }
+
+    deleteDepartment(id: number): Observable<any> {
+        return this.http.delete<any>(this.apiUrl + '/api/departments/' + id, this.httpOptions);
     }
 
     updateLeaveBalance(id: string, payload: any): Observable<any> {
@@ -139,4 +160,45 @@ export class LeaveBalanceService {
     deleteLeave(leaveId: number): Observable<any> {
         return this.http.delete<any>(`${this.apiUrl}/api/leaves/${leaveId}`, this.httpOptions);
     }
+
+    getEmployeeReport(userId: number, startDate?: string, endDate?: string): Observable<any> {
+        let url = `${this.apiUrl}/api/leaves/reports/employee/${userId}`;
+
+        // Default
+        if (startDate && endDate) {
+            url += `?startDate=${startDate}&endDate=${endDate}`;
+        }
+        return this.http.get<any>(url, this.httpOptions);
+    }
+
+    getLeaveTypeReport(leaveTypeId: number, startDate?: string, endDate?: string): Observable<any> {
+        let url = `${this.apiUrl}/api/leaves/reports/leave-type/${leaveTypeId}`;
+
+        if (startDate && endDate) {
+            url += `?startDate=${startDate}&endDate=${endDate}`;
+        }
+
+        return this.http.get<any>(url, this.httpOptions);
+    }
+
+    getDepartmentReport(departmentId: number, startDate?: string, endDate?: string): Observable<any> {
+        let url = `${this.apiUrl}/api/leaves/reports/department/${departmentId}`;
+
+        if (startDate && endDate) {
+            url += `?startDate=${startDate}&endDate=${endDate}`;
+        }
+
+        return this.http.get<any>(url, this.httpOptions);
+    }
+
+    getSummaryReport(startDate?: string, endDate?: string): Observable<any> {
+        let url = `${this.apiUrl}/api/leaves/reports/summary`;
+
+        if (startDate && endDate) {
+            url += `?startDate=${startDate}&endDate=${endDate}`;
+        }
+
+        return this.http.get<any>(url, this.httpOptions);
+    }
+
 } 

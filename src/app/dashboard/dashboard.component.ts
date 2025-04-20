@@ -1,19 +1,19 @@
 import { Component, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
-import { CalendarOptions, EventInput } from '@fullcalendar/core';
+import { CalendarOptions, EventInput, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import multiMonthPlugin from '@fullcalendar/multimonth';
 import interactionPlugin from '@fullcalendar/interaction';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CommonModule } from '@angular/common';
+import { FormsModule, NgForm } from '@angular/forms';
 import { LeaveBalanceService } from '../services/leave-balance.service';
-import { LeaveRequestDialogComponent } from './leave-request-dialog/leave-request-dialog.component';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FullCalendarModule, LeaveRequestDialogComponent],
+  imports: [CommonModule, FormsModule, FullCalendarModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -22,7 +22,7 @@ export class DashboardComponent implements OnInit {
   leaveBalances: any = {};
   leaves: any[] = [];
   showLeaveDialog: boolean = false;
-  selectedStartDate?: string;
+  selectedStartDate: string = '';
   selectedLeave: any = null;
   showLeaveDetails: boolean = false;
   pendingRequestsCount: number = 0;
@@ -77,6 +77,7 @@ export class DashboardComponent implements OnInit {
     this.loadPendingRequestsCount();
     this.loadLeaves();
     this.loadHolidays();
+    this.checkUserRole();
   }
 
   loadLeaveBalances(): void {
@@ -159,12 +160,9 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  handleDateClick(arg: any): void {
-    // Check if the clicked date is a weekend
+  handleDateClick(arg: { dateStr: string }): void {
     const clickedDate = new Date(arg.dateStr);
     const isWeekend = clickedDate.getDay() === 0 || clickedDate.getDay() === 6;
-
-    // Check if the clicked date is a holiday
     const isHoliday = this.holidays.some(holiday =>
       new Date(holiday.date).toISOString().split('T')[0] === arg.dateStr
     );
@@ -191,13 +189,13 @@ export class DashboardComponent implements OnInit {
     this.showLeaveDialog = true;
   }
 
-  handleEventClick(arg: any): void {
-    this.selectedLeave = arg.event.extendedProps.leave;
+  handleEventClick(arg: EventClickArg): void {
+    this.selectedLeave = arg.event.extendedProps['leave'];
     this.showLeaveDetails = true;
   }
 
   openLeaveRequestDialog(): void {
-    this.selectedStartDate = undefined;
+    this.selectedStartDate = '';
     this.showLeaveDialog = true;
   }
 
@@ -205,30 +203,31 @@ export class DashboardComponent implements OnInit {
     this.showLeaveDialog = false;
   }
 
-  onLeaveDialogSubmit(formData: any): void {
-    this.leaveBalanceService.requestLeave(formData).subscribe({
-      next: () => {
-        this.showLeaveDialog = false;
-        this.loadLeaves();
-        this.loadLeaveBalances();
-
-        // show a Swal message
-        Swal.fire({
-          title: 'Success',
-          text: 'Leave requested successfully',
-          icon: 'success'
-        });
-      },
-      error: (error: any) => {
-        // show a Swal message
-        Swal.fire({
-          title: 'Error',
-          text: 'Error requesting leave',
-          icon: 'error'
-        });
-        console.error('Error requesting leave:', error);
-      }
-    });
+  onLeaveDialogSubmit(form: NgForm): void {
+    if (form.valid) {
+      const formData = form.value;
+      this.leaveBalanceService.requestLeave(formData).subscribe({
+        next: () => {
+          this.showLeaveDialog = false;
+          this.loadLeaves();
+          this.loadLeaveBalances();
+          form.reset();
+          Swal.fire({
+            title: 'Success',
+            text: 'Leave requested successfully',
+            icon: 'success'
+          });
+        },
+        error: (error) => {
+          console.error('Error submitting leave request:', error);
+          Swal.fire({
+            title: 'Error',
+            text: 'Error requesting leave',
+            icon: 'error'
+          });
+        }
+      });
+    }
   }
 
   loadPendingRequestsCount(): void {
@@ -254,8 +253,6 @@ export class DashboardComponent implements OnInit {
           this.closeLeaveDetails();
           this.loadLeaves();
           this.loadLeaveBalances();
-
-          // show a Swal message
           Swal.fire({
             title: 'Success',
             text: 'Leave deleted successfully',
@@ -273,5 +270,9 @@ export class DashboardComponent implements OnInit {
     if (this.selectedLeave?.attachment) {
       this.leaveBalanceService.viewLeaveAttachment(this.selectedLeave.attachment);
     }
+  }
+
+  checkUserRole(): void {
+    // Implementation of checkUserRole method
   }
 } 

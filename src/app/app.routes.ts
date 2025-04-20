@@ -8,6 +8,8 @@ import { AuthGuard } from './auth/auth.guard';
 import { LayoutComponent } from './layout/layout.component';
 import { CurrentLeavesComponent } from './layout/current-leaves/current-leaves.component';
 import { MyWorkflowsComponent } from './layout/my-workflows/my-workflows.component';
+import { ReportsComponent } from './layout/reports/reports.component';
+import { TeamCalendarComponent } from './layout/team-calendar/team-calendar.component';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/pages/login', pathMatch: 'full' },
@@ -23,7 +25,10 @@ export const routes: Routes = [
             { path: 'leave-requests', component: LeaveRequestsComponent },
             { path: 'users', component: UsersComponent },
             { path: 'current-leaves', component: CurrentLeavesComponent },
-            { path: 'my-leave-workflows', component: MyWorkflowsComponent }
+            { path: 'my-leave-workflows', component: MyWorkflowsComponent },
+            { path: 'reports', component: ReportsComponent },
+            { path: 'team-calendar', component: TeamCalendarComponent }
         ]
-    }
+    },
+
 ];

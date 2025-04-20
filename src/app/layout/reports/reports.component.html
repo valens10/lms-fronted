@@ -1,0 +1,243 @@
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Reports Dashboard</h1>
+            <p class="text-gray-600 mt-1">Generate and analyze leave reports</p>
+        </div>
+    </div>
+
+    <!-- Report Filters -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
+        <form (ngSubmit)="generateReport()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Report Type Selection -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700" for="reportType">Report Type</label>
+                    <select id="reportType" [(ngModel)]="selectedReportType" name="reportType"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                        (change)="onReportTypeChange()">
+                        <option value="">Select Report Type</option>
+                        <option value="employee">Employee Report</option>
+                        <option value="leaveType">Leave Type Report</option>
+                        <option value="department">Department Report</option>
+                        <option value="summary">Summary Report</option>
+                    </select>
+                </div>
+
+                <!-- Additional Selection based on Report Type -->
+                <div *ngIf="selectedReportType === 'employee'" class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700" for="employee">Employee</label>
+                    <select id="employee" [(ngModel)]="selectedEmployee" name="employee"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                        <option value="">Select Employee</option>
+                        <option *ngFor="let user of users" [value]="user.id">
+                            {{ user.firstName }} {{ user.lastName }}
+                        </option>
+                    </select>
+                </div>
+
+                <div *ngIf="selectedReportType === 'leaveType'" class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700" for="leaveType">Leave Type</label>
+                    <select id="leaveType" [(ngModel)]="selectedLeaveType" name="leaveType"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                        <option value="">Select Leave Type</option>
+                        <option *ngFor="let type of leaveTypes" [value]="type.id">
+                            {{ type.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div *ngIf="selectedReportType === 'department'" class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700" for="department">Department</label>
+                    <select id="department" [(ngModel)]="selectedDepartment" name="department"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                        <option value="">Select Department</option>
+                        <option *ngFor="let dept of departments" [value]="dept.id">
+                            {{ dept.name }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Date Range -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700" for="startDate">Start Date</label>
+                    <input type="date" id="startDate" [(ngModel)]="startDate" name="startDate"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700" for="endDate">End Date</label>
+                    <input type="date" id="endDate" [(ngModel)]="endDate" name="endDate"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-4 pt-4">
+                <button type="button" (click)="resetForm()"
+                    class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    Reset
+                </button>
+                <button type="submit" [disabled]="isLoading || !isFormValid()"
+                    class="px-6 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    {{ isLoading ? 'Generating...' : 'Generate Report' }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Report Results -->
+    <div class="mt-8" *ngIf="reportData">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-gray-800">Report Results</h3>
+            <button (click)="exportToExcel()"
+                class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                Export to Excel
+            </button>
+        </div>
+
+        <!-- Summary Report -->
+        <div *ngIf="selectedReportType === 'summary'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-sm font-medium text-gray-500">Total Applications</h4>
+                    <div class="p-2 bg-emerald-100 rounded-lg">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-gray-900 mt-4">{{ reportData.totalApplications }}</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow">
+                <h4 class="text-sm font-medium text-gray-500 mb-4">By Status</h4>
+                <div class="space-y-3">
+                    <div *ngFor="let status of reportData.statusCount | keyvalue"
+                        class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">{{ status.key }}</span>
+                        <span class="px-3 py-1 text-sm font-medium rounded-full" [ngClass]="{
+                                'bg-green-100 text-green-800': status.key === 'APPROVED',
+                                'bg-yellow-100 text-yellow-800': status.key === 'PENDING',
+                                'bg-red-100 text-red-800': status.key === 'REJECTED'
+                            }">
+                            {{ status.value }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow">
+                <h4 class="text-sm font-medium text-gray-500 mb-4">By Leave Type</h4>
+                <div class="space-y-3">
+                    <div *ngFor="let type of reportData.leaveTypeCount | keyvalue"
+                        class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">{{ type.key }}</span>
+                        <span class="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">
+                            {{ type.value }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow">
+                <h4 class="text-sm font-medium text-gray-500 mb-4">By Department</h4>
+                <div class="space-y-3">
+                    <div *ngFor="let dept of reportData.departmentCount | keyvalue"
+                        class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">{{ dept.key }}</span>
+                        <span class="px-3 py-1 text-sm font-medium bg-purple-100 text-purple-800 rounded-full">
+                            {{ dept.value }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Reports -->
+        <div *ngIf="selectedReportType !== 'summary'"
+            class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-xs">
+                    <thead class="bg-gray-800 sticky top-0">
+                        <tr>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Employee
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Department
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Leave Type
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Start Date
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">End Date
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Half Day
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Status
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Reason
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Attachment
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Created
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-white uppercase tracking-wider">Updated
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let leave of reportData" class="hover:bg-gray-50 transition-colors">
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-900">
+                                {{ leave.user.firstName }} {{ leave.user.lastName }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-900">
+                                {{ leave.user.departmentName }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-900">
+                                {{ leave.leaveType.name }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-900">
+                                {{ leave.startDate | date:'shortDate' }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-900">
+                                {{ leave.endDate | date:'shortDate' }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-900">
+                                {{ leave.isHalfDay ? 'Yes' : 'No' }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap">
+                                <span class="px-1.5 py-0.5 text-xs font-medium rounded-full" [ngClass]="{
+                                        'bg-green-100 text-green-800': leave.status === 'APPROVED',
+                                        'bg-yellow-100 text-yellow-800': leave.status === 'PENDING',
+                                        'bg-red-100 text-red-800': leave.status === 'REJECTED'
+                                    }">
+                                    {{ leave.status }}
+                                </span>
+                            </td>
+                            <td class="px-3 py-2 text-gray-900 max-w-[150px] truncate">
+                                {{ leave.reason || '-' }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-900">
+                                <a *ngIf="leave.attachment" (click)="viewAttachment(leave.attachment)"
+                                    class="text-emerald-600 hover:text-emerald-800 cursor-pointer font-medium">
+                                    View
+                                </a>
+                                <span *ngIf="!leave.attachment" class="text-gray-500">-</span>
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-900">
+                                {{ leave.createdAt | date:'short' }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-900">
+                                {{ leave.updatedAt | date:'short' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
