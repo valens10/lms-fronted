@@ -125,7 +125,7 @@ export class LeaveBalanceService {
     requestLeave(request: any): Observable<any[]> {
         const fhttpOptions = {
             headers: new HttpHeaders({
-                Authorization: 'Bearer ' + this.token,
+                Authorization: 'Bearer ' + this.token
             }),
         };
         return this.http.post<any[]>(`${this.apiUrl}/api/leaves/request`, request, fhttpOptions);

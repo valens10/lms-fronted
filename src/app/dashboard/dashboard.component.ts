@@ -19,7 +19,7 @@ import Swal from 'sweetalert2';
 })
 export class DashboardComponent implements OnInit {
   @ViewChild('dialogContainer', { read: ViewContainerRef }) dialogContainer!: ViewContainerRef;
-  leaveBalances: any[] = [];
+  leaveBalances: any = {};
   leaves: any[] = [];
   showLeaveDialog: boolean = false;
   selectedStartDate?: string;
@@ -52,7 +52,17 @@ export class DashboardComponent implements OnInit {
     height: 800,
     dateClick: this.handleDateClick.bind(this),
     eventClick: this.handleEventClick.bind(this),
-    events: []
+    events: [],
+    dayCellClassNames: (arg) => {
+      const classes = [];
+      if (arg.isToday) {
+        classes.push('bg-blue-50');
+      }
+      if (arg['isWeekend']) {
+        classes.push('bg-gray-50');
+      }
+      return classes;
+    }
   };
 
   constructor(
@@ -71,8 +81,8 @@ export class DashboardComponent implements OnInit {
 
   loadLeaveBalances(): void {
     this.leaveBalanceService.getMyLeaveBalances().subscribe({
-      next: (balances: any[]) => {
-        this.leaveBalances = balances;
+      next: (balances: any) => {
+        this.leaveBalances = balances[0];
       },
       error: (error: any) => {
         console.error('Error loading leave balances:', error);
@@ -84,7 +94,7 @@ export class DashboardComponent implements OnInit {
     this.leaveBalanceService.getMyLeaves().subscribe({
       next: (leaves: any[]) => {
         this.leaves = leaves;
-        this.updateCalendarEvents(leaves);
+        this.updateCalendarEvents();
       },
       error: (error: any) => {
         console.error('Error loading leaves:', error);
@@ -92,8 +102,23 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  updateCalendarEvents(leaves: any[]): void {
-    const events: EventInput[] = leaves.map(leave => ({
+  loadHolidays(): void {
+    this.leaveBalanceService.getHolidays().subscribe({
+      next: (holidays: any[]) => {
+        this.holidays = holidays.sort((a, b) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        this.updateCalendarEvents();
+      },
+      error: (error: any) => {
+        console.error('Error loading holidays:', error);
+      }
+    });
+  }
+
+  updateCalendarEvents(): void {
+    // Create leave events
+    const leaveEvents: EventInput[] = this.leaves.map(leave => ({
       id: leave.id.toString(),
       title: `${leave.leaveType.name} - ${leave.status}`,
       start: leave.startDate,
@@ -104,7 +129,19 @@ export class DashboardComponent implements OnInit {
       extendedProps: { leave }
     }));
 
-    this.calendarOptions.events = events;
+    // Create holiday events
+    const holidayEvents: EventInput[] = this.holidays.map(holiday => ({
+      id: `holiday-${holiday.id}`,
+      title: holiday.name,
+      start: holiday.date,
+      allDay: true,
+      backgroundColor: '#F59E0B',
+      borderColor: '#F59E0B',
+      textColor: '#000000'
+    }));
+
+    // Combine all events
+    this.calendarOptions.events = [...leaveEvents, ...holidayEvents];
   }
 
   getEventColor(leaveTypeId: number, status: string): string {
@@ -123,6 +160,33 @@ export class DashboardComponent implements OnInit {
   }
 
   handleDateClick(arg: any): void {
+    // Check if the clicked date is a weekend
+    const clickedDate = new Date(arg.dateStr);
+    const isWeekend = clickedDate.getDay() === 0 || clickedDate.getDay() === 6;
+
+    // Check if the clicked date is a holiday
+    const isHoliday = this.holidays.some(holiday =>
+      new Date(holiday.date).toISOString().split('T')[0] === arg.dateStr
+    );
+
+    if (isWeekend) {
+      Swal.fire({
+        title: 'Not Allowed',
+        text: 'Cannot request leave for weekends',
+        icon: 'warning'
+      });
+      return;
+    }
+
+    if (isHoliday) {
+      Swal.fire({
+        title: 'Not Allowed',
+        text: 'Cannot request leave for holidays',
+        icon: 'warning'
+      });
+      return;
+    }
+
     this.selectedStartDate = arg.dateStr;
     this.showLeaveDialog = true;
   }
@@ -156,6 +220,12 @@ export class DashboardComponent implements OnInit {
         });
       },
       error: (error: any) => {
+        // show a Swal message
+        Swal.fire({
+          title: 'Error',
+          text: 'Error requesting leave',
+          icon: 'error'
+        });
         console.error('Error requesting leave:', error);
       }
     });
@@ -168,20 +238,6 @@ export class DashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading pending requests count:', error);
-      }
-    });
-  }
-
-  loadHolidays(): void {
-    this.leaveBalanceService.getHolidays().subscribe({
-      next: (holidays) => {
-        this.holidays = holidays.sort((a, b) =>
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-        this.updateCalendarEvents(this.leaves);
-      },
-      error: (error) => {
-        console.error('Error loading holidays:', error);
       }
     });
   }

@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LeaveBalanceService } from '../../services/leave-balance.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-leave-request-dialog',
@@ -14,6 +15,9 @@ import { LeaveBalanceService } from '../../services/leave-balance.service';
         <div class="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all">
           <div class="p-6">
             <h2 class="text-2xl font-bold text-gray-900 mb-4">Request Leave</h2>
+            <div class="text-sm text-gray-600 mb-4">
+              Today: {{ minDate }}
+            </div>
             <form [formGroup]="leaveForm" (ngSubmit)="onSubmit()" class="space-y-4">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -27,6 +31,9 @@ import { LeaveBalanceService } from '../../services/leave-balance.service';
                       {{ type.name }}
                     </option>
                   </select>
+                  <div *ngIf="selectedLeaveType?.isAnnualLeave" class="text-sm text-gray-600 mt-1">
+                    Available days: {{ availableAnnualLeave }}
+                  </div>
                 </div>
 
                 <div>
@@ -57,6 +64,13 @@ import { LeaveBalanceService } from '../../services/leave-balance.service';
                   </div>
                   <div *ngIf="totalDays > 0" class="text-sm text-gray-600 mt-1">
                     Total days: {{ totalDays }} {{ totalDays === 1 ? 'day' : 'days' }}
+                  </div>
+                  <div *ngIf="selectedLeaveType?.isAnnualLeave && totalDays > 0" 
+                       [class.text-red-500]="totalDays > availableAnnualLeave"
+                       class="text-sm mt-1">
+                    {{ totalDays > availableAnnualLeave ? 
+                       'Exceeds available days by ' + (totalDays - availableAnnualLeave) : 
+                       (availableAnnualLeave - totalDays) + ' days remaining' }}
                   </div>
                 </div>
 
@@ -97,7 +111,7 @@ import { LeaveBalanceService } from '../../services/leave-balance.service';
                 </button>
                 <button 
                   type="submit"
-                  [disabled]="!leaveForm.valid"
+                  [disabled]="isSubmitDisabled"
                   class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
                   Submit Request
                 </button>
@@ -120,36 +134,87 @@ export class LeaveRequestDialogComponent implements OnInit {
   minDate: string;
   totalDays: number = 0;
   leaveTypes: any[] = [];
+  holidays: any[] = [];
+  availableAnnualLeave: number = 0;
+  isSubmitDisabled: boolean = true;
 
   constructor(
     private fb: FormBuilder,
     private leaveBalanceService: LeaveBalanceService
   ) {
-    // Set minimum date to today
     const today = new Date();
     this.minDate = today.toISOString().split('T')[0];
 
     this.leaveForm = this.fb.group({
       leaveTypeId: ['', Validators.required],
       startDate: [this.minDate, [Validators.required, this.minDateValidator()]],
-      endDate: [this.minDate, [Validators.required, this.minDateValidator()]],
+      endDate: ['', [this.minDateValidator()]],
       isHalfDay: [false],
       reason: ['']
     });
 
     this.leaveForm.get('leaveTypeId')?.valueChanges.subscribe(id => {
-      this.selectedLeaveType = this.leaveTypes.find(type => type.id === id);
+      this.selectedLeaveType = this.leaveTypes.find(type => type.id == id);
+      if (this.selectedLeaveType?.isAnnualLeave) {
+        this.checkAnnualLeaveAvailability();
+      } else {
+        this.isSubmitDisabled = !this.leaveForm.valid;
+      }
+    });
+
+    this.leaveForm.get('startDate')?.valueChanges.subscribe(() => {
+      this.calculateTotalDays();
+      if (this.selectedLeaveType?.isAnnualLeave) {
+        this.checkAnnualLeaveAvailability();
+      }
+    });
+
+    this.leaveForm.get('endDate')?.valueChanges.subscribe(() => {
+      this.calculateTotalDays();
+      if (this.selectedLeaveType?.isAnnualLeave) {
+        this.checkAnnualLeaveAvailability();
+      }
+    });
+
+    this.leaveForm.get('isHalfDay')?.valueChanges.subscribe(() => {
+      this.calculateTotalDays();
+      if (this.selectedLeaveType?.isAnnualLeave) {
+        this.checkAnnualLeaveAvailability();
+      }
     });
   }
 
   ngOnInit(): void {
     this.loadLeaveTypes();
+    this.loadHolidays();
+    this.loadAvailableAnnualLeave();
   }
 
-  loadLeaveTypes(): void {
+  loadAvailableAnnualLeave(): void {
+    this.leaveBalanceService.getMyLeaveBalances().subscribe({
+      next: (balances: any) => {
+        this.availableAnnualLeave = balances[0] ? balances[0].balance : 0;
+        this.filterLeaveTypes();
+      },
+      error: (error) => {
+        console.error('Error loading annual leave balance:', error);
+      }
+    });
+  }
+
+  filterLeaveTypes(): void {
     this.leaveBalanceService.getLeaveTypes().subscribe({
       next: (types) => {
-        this.leaveTypes = types;
+        // Filter out annual leave if no days are available
+        this.leaveTypes = types.filter(type =>
+          !type.isAnnualLeave || this.availableAnnualLeave > 0
+        );
+        // If we have a leaveTypeId selected, set the selectedLeaveType
+        const selectedId = this.leaveForm.get('leaveTypeId')?.value;
+        if (selectedId) {
+          this.selectedLeaveType = this.leaveTypes.find(type => type.id === selectedId);
+          console.log('Selected leave type after filtering:', this.selectedLeaveType);
+        }
       },
       error: (error) => {
         console.error('Error loading leave types:', error);
@@ -157,7 +222,19 @@ export class LeaveRequestDialogComponent implements OnInit {
     });
   }
 
-  calculateTotalDays() {
+  checkAnnualLeaveAvailability(): void {
+    if (this.selectedLeaveType?.isAnnualLeave) {
+      if (this.totalDays > this.availableAnnualLeave) {
+        this.isSubmitDisabled = true;
+      } else {
+        this.checkMaxDays();
+      }
+    } else {
+      this.checkMaxDays();
+    }
+  }
+
+  calculateTotalDays(): void {
     const startDate = this.leaveForm.get('startDate')?.value;
     const endDate = this.leaveForm.get('endDate')?.value;
     const isHalfDay = this.leaveForm.get('isHalfDay')?.value;
@@ -165,9 +242,33 @@ export class LeaveRequestDialogComponent implements OnInit {
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      this.totalDays = isHalfDay ? 0.5 : diffDays;
+      let days = 0;
+
+      // Calculate total days excluding weekends and holidays
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const day = d.getDay();
+        const dateStr = d.toISOString().split('T')[0];
+
+        // Skip weekends (0 = Sunday, 6 = Saturday)
+        if (day !== 0 && day !== 6) {
+          // Check if the date is a holiday
+          const isHoliday = this.holidays.some(holiday =>
+            holiday.date === dateStr
+          );
+
+          if (!isHoliday) {
+            days++;
+          }
+        }
+      }
+
+      // If it's a half day, count as 0.5 days
+      this.totalDays = isHalfDay ? 0.5 : days;
+
+      // Check annual leave availability after calculating total days
+      if (this.selectedLeaveType?.isAnnualLeave) {
+        this.checkAnnualLeaveAvailability();
+      }
     } else {
       this.totalDays = 0;
     }
@@ -188,12 +289,6 @@ export class LeaveRequestDialogComponent implements OnInit {
   }
 
   onStartDateChange() {
-    const startDate = this.leaveForm.get('startDate')?.value;
-    const endDate = this.leaveForm.get('endDate')?.value;
-
-    if (startDate && endDate && startDate > endDate) {
-      this.leaveForm.patchValue({ endDate: startDate });
-    }
     this.calculateTotalDays();
   }
 
@@ -205,6 +300,34 @@ export class LeaveRequestDialogComponent implements OnInit {
       this.leaveForm.patchValue({ endDate: startDate });
     }
     this.calculateTotalDays();
+
+    if (this.selectedLeaveType?.isAnnualLeave) {
+      if (this.totalDays > this.availableAnnualLeave) {
+        Swal.fire({
+          title: 'Insufficient Leave Balance',
+          text: `You only have ${this.availableAnnualLeave} days of annual leave available`,
+          icon: 'warning'
+        });
+        this.isSubmitDisabled = true;
+      } else {
+        this.checkMaxDays();
+      }
+    } else {
+      this.checkMaxDays();
+    }
+  }
+
+  checkMaxDays(): void {
+    if (this.selectedLeaveType?.maxDays && this.totalDays > this.selectedLeaveType.maxDays) {
+      Swal.fire({
+        title: 'Maximum Days Exceeded',
+        text: `This leave type has a maximum of ${this.selectedLeaveType.maxDays} days`,
+        icon: 'warning'
+      });
+      this.isSubmitDisabled = true;
+    } else {
+      this.isSubmitDisabled = !this.leaveForm.valid;
+    }
   }
 
   ngOnChanges(): void {
@@ -226,12 +349,58 @@ export class LeaveRequestDialogComponent implements OnInit {
         ...formValue,
         attachment: this.selectedFile || undefined
       };
-      this.submit.emit(request);
+      // Should be form data
+      const formData = new FormData();
+      formData.append('leaveTypeId', formValue.leaveTypeId);
+      formData.append('startDate', formValue.startDate);
+      formData.append('endDate', formValue.endDate);
+      formData.append('isHalfDay', formValue.isHalfDay);
+      formData.append('reason', formValue.reason);
+      formData.append('attachment', this.selectedFile || '');
+      this.submit.emit(formData);
       this.close.emit();
     }
   }
 
   onCancel(): void {
     this.close.emit();
+  }
+
+  loadLeaveTypes(): void {
+    this.leaveBalanceService.getLeaveTypes().subscribe({
+      next: (types) => {
+        this.leaveTypes = types;
+        const selectedId = this.leaveForm.get('leaveTypeId')?.value;
+        if (selectedId) {
+          this.selectedLeaveType = this.leaveTypes.find(type => type.id === selectedId);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading leave types:', error);
+      }
+    });
+  }
+
+  loadHolidays(): void {
+    this.leaveBalanceService.getHolidays().subscribe({
+      next: (holidays) => {
+        this.holidays = holidays;
+      },
+      error: (error) => {
+        console.error('Error loading holidays:', error);
+      }
+    });
+  }
+
+  updateSubmitButtonState(): void {
+    if (this.selectedLeaveType?.isAnnualLeave) {
+      if (this.totalDays > this.availableAnnualLeave) {
+        this.isSubmitDisabled = true;
+      } else {
+        this.checkMaxDays();
+      }
+    } else {
+      this.checkMaxDays();
+    }
   }
 } 

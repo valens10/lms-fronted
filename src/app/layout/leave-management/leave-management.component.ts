@@ -311,7 +311,7 @@ export class LeaveManagementComponent implements OnInit {
                     console.error('Error creating leave balance:', error);
                     Swal.fire({
                         title: 'Error',
-                        text: 'Failed to create leave balance',
+                        text: error.error.message || 'Failed to create leave balance',
                         icon: 'error',
                         confirmButtonColor: '#10B981'
                     });

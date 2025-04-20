@@ -42,10 +42,11 @@
                 <div>
                     <p class="text-sm text-gray-500">Leave Balances</p>
                     <div class="mt-1">
-                        <div *ngFor="let balance of leaveBalances" class="flex items-center justify-between text-sm">
-                            <span class="text-gray-600">{{ balance.leaveType.name }}</span>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">{{ leaveBalances?.leaveType?.name || 'Annual Leave' }}</span>
                             <span class="mx-2">•</span>
-                            <span class="font-semibold text-blue-600"> {{ balance.remainingDays }} days</span>
+                            <span class="font-semibold text-blue-600"> {{ leaveBalances?.balance || 0 }}
+                                days</span>
                         </div>
                     </div>
                 </div>
