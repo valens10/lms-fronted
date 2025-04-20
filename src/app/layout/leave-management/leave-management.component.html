@@ -1,0 +1,389 @@
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Leave Management</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 mb-6">
+        <nav class="-mb-px flex space-x-8">
+            <button (click)="activeTab = 'balances'"
+                [class]="activeTab === 'balances' ? 'border-emerald-500 text-emerald-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'">
+                Leave Balances
+            </button>
+            <button (click)="activeTab = 'types'"
+                [class]="activeTab === 'types' ? 'border-emerald-500 text-emerald-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'">
+                Leave Types
+            </button>
+            <button (click)="activeTab = 'holidays'"
+                [class]="activeTab === 'holidays' ? 'border-emerald-500 text-emerald-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'">
+                Holidays
+            </button>
+        </nav>
+    </div>
+
+    <!-- Leave Balances Tab -->
+    <div *ngIf="activeTab === 'balances'">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Leave Balances</h2>
+            <button (click)="openAddModal()"
+                class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg">
+                Add Leave Balance
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+        </div>
+
+        <!-- Content -->
+        <div *ngIf="!isLoading" class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                User
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Leave
+                                Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Balance</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Valid
+                                Until</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let balance of leaveBalances">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ balance.user.firstName }} {{ balance.user.lastName
+                                    }}
+                                </div>
+                                <div class="text-sm text-gray-500">{{ balance.user.email }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ balance.leaveType.name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ balance.balance }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ balance.validUntil | date }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button (click)="openEditModal(balance)"
+                                    class="text-emerald-600 hover:text-emerald-900 mr-4">Edit</button>
+                                <button (click)="deleteBalance(balance.id)"
+                                    class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isLoading && leaveBalances.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+            <p class="text-gray-500">No leave balances found</p>
+        </div>
+    </div>
+
+    <!-- Leave Types Tab -->
+    <div *ngIf="activeTab === 'types'">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Leave Types</h2>
+            <button (click)="isModalOpen = true"
+                class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg">
+                Add Leave Type
+            </button>
+        </div>
+
+        <!-- Leave Types Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Name
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Max
+                                Days</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Paid
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Requires Approval</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Annual Leave</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let type of leaveTypes">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ type.name }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">{{ type.description }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ type.maxDays }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ type.isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800' }}">
+                                    {{ type.isPaid ? 'Yes' : 'No' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ type.requiresApproval ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800' }}">
+                                    {{ type.requiresApproval ? 'Yes' : 'No' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ type.isAnnualLeave ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800' }}">
+                                    {{ type.isAnnualLeave ? 'Yes' : 'No' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button (click)="deleteLeaveType(type.id)"
+                                    class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="leaveTypes.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+            <p class="text-gray-500">No leave types found</p>
+        </div>
+    </div>
+
+    <!-- Holidays Tab -->
+    <div *ngIf="activeTab === 'holidays'">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Holidays</h2>
+            <button (click)="isModalOpen = true"
+                class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg">
+                Add Holiday
+            </button>
+        </div>
+
+        <!-- Holidays Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let holiday of holidays">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ holiday.name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ holiday.date | date }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">{{ holiday.description }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button (click)="deleteHoliday(holiday.id)"
+                                    class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="holidays.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+            <p class="text-gray-500">No holidays found</p>
+        </div>
+    </div>
+
+    <!-- Add Leave Type Modal -->
+    <div *ngIf="isModalOpen && activeTab === 'types'"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Add Leave Type</h3>
+            <form (ngSubmit)="createLeaveType()" #leaveTypeForm="ngForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Name</label>
+                    <input type="text" id="name" [(ngModel)]="newLeaveType.name" name="name"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="description">Description</label>
+                    <textarea id="description" [(ngModel)]="newLeaveType.description" name="description"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        required></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="maxDays">Max Days <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" id="maxDays" [(ngModel)]="newLeaveType.maxDays" name="maxDays" min="1"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        required>
+                    <div *ngIf="leaveTypeForm.submitted && !newLeaveType.maxDays" class="text-red-500 text-sm mt-1">
+                        Max days is required
+                    </div>
+                    <div *ngIf="newLeaveType.maxDays < 1" class="text-red-500 text-sm mt-1">
+                        Max days must be greater than 0
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" [(ngModel)]="newLeaveType.isPaid" name="isPaid"
+                            class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="ml-2 text-sm text-gray-700">Paid Leave</span>
+                    </label>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" [(ngModel)]="newLeaveType.requiresApproval" name="requiresApproval"
+                            class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="ml-2 text-sm text-gray-700">Requires Approval</span>
+                    </label>
+                </div>
+                <div class="mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" [(ngModel)]="newLeaveType.isAnnualLeave" name="isAnnualLeave"
+                            class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="ml-2 text-sm text-gray-700">Annual Leave</span>
+                    </label>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" (click)="isModalOpen = false"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        Cancel
+                    </button>
+                    <button type="submit" [disabled]="isSubmitting || !newLeaveType.maxDays || newLeaveType.maxDays < 1"
+                        class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                        {{ isSubmitting ? 'Creating...' : 'Create' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leave Balance Modal -->
+    <div *ngIf="isModalOpen && activeTab === 'balances'"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ isEditing ? 'Edit' : 'Add' }} Leave Balance</h3>
+            <form (ngSubmit)="saveBalance()">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="userId">User</label>
+                    <select id="userId" [(ngModel)]="selectedBalance.userId" name="userId" [disabled]="isEditing"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="" disabled selected>Select User</option>
+                        <option *ngFor="let user of users" [value]="user.id">
+                            {{ user.firstName }} {{ user.lastName }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="leaveTypeId">Leave Type</label>
+                    <select id="leaveTypeId" [(ngModel)]="selectedBalance.leaveTypeId" name="leaveTypeId"
+                        [disabled]="isEditing"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="" disabled selected>Select Leave Type</option>
+                        <option *ngFor="let type of leaveTypes | filter: 'isAnnualLeave':true" [value]="type.id">
+                            {{ type.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="balance">Balance</label>
+                    <input type="number" id="balance" [(ngModel)]="selectedBalance.balance" name="balance"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="validUntil">Valid Until
+                        (Optional)</label>
+                    <input type="date" id="validUntil" [(ngModel)]="selectedBalance.validUntil" name="validUntil"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="button" (click)="closeModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        Cancel
+                    </button>
+                    <button type="submit" [disabled]="isSubmitting"
+                        class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                        {{ isSubmitting ? 'Saving...' : 'Save' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Holiday Modal -->
+    <div *ngIf="isModalOpen && activeTab === 'holidays'"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Add Holiday</h3>
+            <form (ngSubmit)="createHoliday()" #holidayForm="ngForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="holidayName">Name <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" id="holidayName" [(ngModel)]="newHoliday.name" name="name"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="holidayDate">Date <span
+                            class="text-red-500">*</span></label>
+                    <input type="date" id="holidayDate" [(ngModel)]="newHoliday.date" name="date"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2"
+                        for="holidayDescription">Description</label>
+                    <textarea id="holidayDescription" [(ngModel)]="newHoliday.description" name="description"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" (click)="isModalOpen = false"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        Cancel
+                    </button>
+                    <button type="submit" [disabled]="isSubmitting || !newHoliday.name || !newHoliday.date"
+                        class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                        {{ isSubmitting ? 'Creating...' : 'Create' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

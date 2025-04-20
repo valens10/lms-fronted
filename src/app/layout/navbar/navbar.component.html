@@ -1,0 +1,116 @@
+<nav class="fixed top-0 left-0 right-0 bg-white border-b z-10">
+    <div class="px-4">
+        <div class="flex justify-between h-14">
+            <!-- Left side -->
+            <div class="flex items-center gap-4">
+                <button (click)="toggleSidebar.emit()" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <h1 class="text-xl font-bold text-emerald-600">LMS</h1>
+            </div>
+
+            <!-- Right side -->
+            <div class="flex items-center gap-4">
+                <!-- Notifications -->
+                <div class="relative" #notificationContainer>
+                    <button (click)="toggleNotificationPanel()"
+                        class="text-gray-500 hover:text-gray-700 focus:outline-none relative">
+                        <div class="relative">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <span *ngIf="unreadCount > 0"
+                                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
+                                {{ unreadCount }}
+                            </span>
+                        </div>
+                    </button>
+
+                    <!-- Notification Panel -->
+                    <div *ngIf="isNotificationPanelOpen"
+                        class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg overflow-hidden z-50">
+                        <div class="p-3">
+                            <h3 class="text-sm font-medium text-gray-900 mb-2">Notifications</h3>
+
+                            <!-- Loading State -->
+                            <div *ngIf="isLoading" class="flex justify-center items-center h-24">
+                                <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-emerald-500">
+                                </div>
+                            </div>
+
+                            <!-- Empty State -->
+                            <div *ngIf="!isLoading && notifications.length === 0"
+                                class="text-center text-gray-500 py-2 text-sm">
+                                No notifications
+                            </div>
+
+                            <!-- Notifications List -->
+                            <div *ngIf="!isLoading && notifications.length > 0"
+                                class="space-y-2 max-h-60 overflow-y-auto">
+                                <div *ngFor="let notification of notifications" class="border-b pb-2 last:border-b-0">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-medium text-gray-900">{{ notification.title
+                                                    }}</span>
+                                            </div>
+                                            <p class="mt-0.5 text-xs text-gray-500">{{
+                                                getNotificationMessage(notification.message) }}</p>
+                                            <p class="mt-0.5 text-[10px] text-gray-400">{{
+                                                formatDate(notification.createdAt) }}</p>
+                                        </div>
+                                        <button *ngIf="!notification.read" (click)="markAsRead(notification.id)"
+                                            class="ml-2 text-[10px] text-emerald-600 hover:text-emerald-900">
+                                            Mark as read
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile Dropdown -->
+                <div class="relative" #userMenuContainer>
+                    <button (click)="toggleUserMenu()" class="flex items-center gap-2 focus:outline-none">
+                        <div class="flex items-center">
+                            <img *ngIf="user.profilePicture" [src]="user.profilePicture" alt="User avatar"
+                                class="h-8 w-8 rounded-full">
+                            <div *ngIf="!user.profilePicture"
+                                class="h-8 w-8 rounded-full bg-[#0D8ABC] flex items-center justify-center text-white">
+                                {{ user.firstName.charAt(0) }}
+                            </div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700">{{ fullName }}</span>
+                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div *ngIf="isUserMenuOpen"
+                        class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+                        <div class="px-4 py-2 border-b">
+                            <p class="text-sm text-gray-500">{{ user.email }}</p>
+                            <p class="text-xs text-[#0D8ABC] mt-1">
+                                {{
+                                user.roles[0] === 'ROLE_ADMIN' ? 'Admin' :
+                                user.roles[0] === 'ROLE_MANAGER' ? 'Manager' :
+                                user.roles[0] === 'ROLE_STAFF' ? 'Staff' :
+                                'Employee'
+                                }}
+                            </p>
+                        </div>
+                        <a href="/auth/login" (click)="logout()"
+                            class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t">Sign
+                            out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

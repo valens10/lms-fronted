@@ -1,0 +1,177 @@
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">My Leave Workflows</h1>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="!isLoading" class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Leave Type
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Period
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Last Updated
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr *ngFor="let workflow of workflows">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ workflow.leaveApplication.leaveTypeName }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {{ workflow.leaveApplication.startDate | date }} -
+                                {{ workflow.leaveApplication.endDate | date }}
+                            </div>
+                            <div class="text-sm text-gray-500" *ngIf="workflow.leaveApplication.isHalfDay">
+                                Half Day
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                [class]="getStatusClass(workflow.status)">
+                                {{ getStatusText(workflow.status) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ workflow.updatedAt | date:'medium' }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button (click)="openDetailsModal(workflow)"
+                                class="text-emerald-600 hover:text-emerald-900">View Details</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && workflows.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+        <p class="text-gray-500">No leave workflows found</p>
+    </div>
+
+    <!-- Details Modal -->
+    <div *ngIf="isModalOpen && selectedWorkflow"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <!-- Sticky Header -->
+            <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900">Leave Application Details</h3>
+                <button (click)="closeModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto px-6 py-4">
+                <div class="space-y-6">
+                    <!-- Status Badge -->
+                    <div class="flex justify-center">
+                        <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full"
+                            [class]="getStatusClass(selectedWorkflow.status)">
+                            {{ getStatusText(selectedWorkflow.status) }}
+                        </span>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-gray-500 mb-4">Basic Information</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-500">Leave Type</h4>
+                                <p class="mt-1 text-sm text-gray-900">{{ selectedWorkflow.leaveApplication.leaveTypeName
+                                    }}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-500">Half Day</h4>
+                                <p class="mt-1 text-sm text-gray-900">{{ selectedWorkflow.leaveApplication.isHalfDay ?
+                                    'Yes' : 'No' }}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-500">Start Date</h4>
+                                <p class="mt-1 text-sm text-gray-900">{{ selectedWorkflow.leaveApplication.startDate |
+                                    date }}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-500">End Date</h4>
+                                <p class="mt-1 text-sm text-gray-900">{{ selectedWorkflow.leaveApplication.endDate |
+                                    date }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-gray-500 mb-4">Reason</h4>
+                        <p class="text-sm text-gray-900 whitespace-pre-line">{{ selectedWorkflow.leaveApplication.reason
+                            }}</p>
+                    </div>
+
+                    <!-- Approval Information -->
+                    <div *ngIf="selectedWorkflow.status !== 'PENDING'" class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-gray-500 mb-4">Approval Details</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-500">Approved By</h4>
+                                <p class="mt-1 text-sm text-gray-900">{{ selectedWorkflow.approvedByName }}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-500">Approval Date</h4>
+                                <p class="mt-1 text-sm text-gray-900">{{ selectedWorkflow.approvedDate | date:'medium'
+                                    }}</p>
+                            </div>
+                            <div class="col-span-2">
+                                <h4 class="text-xs font-medium text-gray-500">Comments</h4>
+                                <p class="mt-1 text-sm text-gray-900 whitespace-pre-line">{{ selectedWorkflow.comments
+                                    }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attachment -->
+                    <div *ngIf="selectedWorkflow.leaveApplication.attachment" class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-gray-500 mb-4">Attachment</h4>
+                        <a (click)="viewLeaveAttachment(selectedWorkflow.leaveApplication.attachment)" target="_blank"
+                            class="inline-flex items-center text-emerald-600 hover:text-emerald-900 text-sm">
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                            View Attachment
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end">
+                <button (click)="closeModal()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

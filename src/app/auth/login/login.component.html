@@ -1,0 +1,111 @@
+<div class="min-h-screen flex">
+    <!-- Left side - Animated Background -->
+    <div class="hidden lg:block relative w-1/2">
+        <div class="animated-bg">
+            <div class="pattern-grid"></div>
+            <div class="floating-circles">
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+        </div>
+
+        <!-- Content Overlay -->
+        <div class="absolute inset-0 flex flex-col items-start justify-center px-12 text-white z-10 content-wrapper">
+            <h1 class="text-5xl font-bold mb-4">Welcome to<br />LMS</h1>
+            <p class="text-xl mb-12 max-w-lg opacity-90">Streamline your leave requests and approvals with our intuitive
+                platform</p>
+            <div class="space-y-6">
+                <div class="flex items-center space-x-4 transition-all hover:translate-x-2">
+                    <div class="bg-white bg-opacity-20 rounded-full p-2">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    </div>
+                    <p class="text-lg">Easy leave request submission</p>
+                </div>
+                <div class="flex items-center space-x-4 transition-all hover:translate-x-2">
+                    <div class="bg-white bg-opacity-20 rounded-full p-2">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </div>
+                    <p class="text-lg">Real-time notifications</p>
+                </div>
+                <div class="flex items-center space-x-4 transition-all hover:translate-x-2">
+                    <div class="bg-white bg-opacity-20 rounded-full p-2">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <p class="text-lg">Comprehensive analytics</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right side - Content -->
+    <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
+        <div class="max-w-md w-full space-y-8 content-wrapper">
+            <!-- Logo and Heading -->
+            <div class="text-center">
+                <img class="h-16 w-auto mx-auto transition-all hover:scale-105" src="assets/logo.svg" alt="LMS">
+                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Welcome Back</h2>
+                <p class="mt-2 text-sm text-gray-600">
+                    Sign in to manage leave requests
+                </p>
+            </div>
+
+            <!-- Error Alert -->
+            <div *ngIf="error" class="rounded-md bg-red-50 p-4 animate-fadeIn">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">{{ error }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Google Sign In Button -->
+            <div class="mt-8">
+                <button type="button" (click)="signInWithGoogle()" [disabled]="isLoading"
+                    class="hover-effect w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-[#0D8ABC] hover:bg-[#0A6D94] shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+                    <img src="assets/google.svg" alt="Google" class="h-5 w-5 mr-3">
+                    <span *ngIf="!isLoading">Sign in with Google</span>
+                    <span *ngIf="isLoading" class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                            fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        Signing in...
+                    </span>
+                </button>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="mt-6">
+                <p class="text-center text-sm text-gray-600">
+                    By signing in, you agree to our
+                    <a href="#" class="font-medium text-[#0D8ABC] hover:text-[#0A6D94] transition-colors">Terms of
+                        Service</a>
+                    and
+                    <a href="#" class="font-medium text-[#0D8ABC] hover:text-[#0A6D94] transition-colors">Privacy
+                        Policy</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

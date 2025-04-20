@@ -1,0 +1,17 @@
+<div class="min-h-screen bg-gray-50">
+    <!-- Fixed navbar at top -->
+    <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
+
+    <!-- Main container with sidebar and content -->
+    <div class="flex h-screen pt-16">
+        <!-- Sidebar -->
+        <app-sidebar [isOpen]="isSidebarOpen"></app-sidebar>
+
+        <!-- Main Content -->
+        <main [class.pl-64]="isSidebarOpen" class="flex-1 w-full min-h-full transition-all duration-300">
+            <div class="p-4">
+                <router-outlet></router-outlet>
+            </div>
+        </main>
+    </div>
+</div>

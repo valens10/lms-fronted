@@ -1,0 +1,159 @@
+<div class="container mx-auto p-4">
+    <!-- Header Cards Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Next Holiday Card -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Next Holiday</p>
+                    <p class="text-lg font-bold text-gray-900">{{ holidays[0]?.name || 'No upcoming holidays' }}</p>
+                    <p class="text-sm text-gray-600">{{ holidays[0]?.date | date:'MMM d, y' }}</p>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests Card -->
+        <div *ngIf="isAdminOrManager" class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Pending Requests</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ pendingRequestsCount }}</p>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Balances Card -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Leave Balances</p>
+                    <div class="mt-1">
+                        <div *ngFor="let balance of leaveBalances" class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">{{ balance.leaveType.name }}</span>
+                            <span class="mx-2">•</span>
+                            <span class="font-semibold text-blue-600"> {{ balance.remainingDays }} days</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Quick Actions</p>
+                    <button (click)="openLeaveRequestDialog()"
+                        class="mt-2 bg-[#10B981] hover:bg-[#059669] text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        Request Leave
+                    </button>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Section -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <full-calendar [options]="calendarOptions"></full-calendar>
+    </div>
+
+    <!-- Leave Request Dialog -->
+    <app-leave-request-dialog *ngIf="showLeaveDialog" [startDate]="selectedStartDate" (close)="onLeaveDialogClose()"
+        (submit)="onLeaveDialogSubmit($event)">
+    </app-leave-request-dialog>
+
+    <!-- Leave Details Modal -->
+    <div *ngIf="showLeaveDetails"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full relative">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Leave Details</h2>
+                    <button (click)="closeLeaveDetails()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Leave Type</p>
+                            <p class="font-medium">{{ selectedLeave?.leaveType.name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Status</p>
+                            <p class="font-medium">
+                                <span [ngClass]="{
+                                    'text-yellow-600': selectedLeave?.status === 'PENDING',
+                                    'text-green-600': selectedLeave?.status === 'APPROVED',
+                                    'text-red-600': selectedLeave?.status === 'REJECTED'
+                                }">
+                                    {{ selectedLeave?.status }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Start Date</p>
+                            <p class="font-medium">{{ selectedLeave?.startDate | date }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">End Date</p>
+                            <p class="font-medium">{{ selectedLeave?.endDate | date }}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-sm text-gray-500">Reason</p>
+                        <p class="font-medium">{{ selectedLeave?.reason || 'No reason provided' }}</p>
+                    </div>
+
+                    <div *ngIf="selectedLeave?.attachment">
+                        <p class="text-sm text-gray-500">Attachment</p>
+                        <button (click)="viewAttachment()" class="text-blue-600 hover:text-blue-800">
+                            View Attachment
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button *ngIf="selectedLeave?.status === 'PENDING'" (click)="deleteLeave()"
+                        class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        Delete Leave
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,62 @@
+<aside class="fixed left-0 z-40 w-64 h-[calc(100vh-4rem)] transition-transform" style="background-color: #0D8ABC"
+    [class.-translate-x-full]="!isOpen" [class.translate-x-0]="isOpen">
+    <div class="h-full px-3 py-4 overflow-y-auto">
+        <nav class="h-full space-y-1">
+            <ul class="space-y-2">
+                <li>
+                    <a routerLink="/pages/dashboard"
+                        class="flex items-center p-3 text-white rounded-lg hover:bg-[#0A6D94] group transition-colors"
+                        routerLinkActive="bg-[#085D7E] font-semibold shadow-inner">
+                        <i class="fas fa-home w-5 h-5 text-sky-100"></i>
+                        <span class="ml-3 font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a routerLink="/pages/my-leave-workflows"
+                        class="flex items-center p-3 text-white rounded-lg hover:bg-[#0A6D94] group transition-colors"
+                        routerLinkActive="bg-[#085D7E] font-semibold shadow-inner">
+                        <i class="fas fa-tasks w-5 h-5 text-sky-100"></i>
+                        <span class="ml-3 font-medium">My leaves</span>
+                    </a>
+                </li>
+                <li *ngIf="hasAdminOrManagerRole()">
+                    <a routerLink="/pages/leave-requests"
+                        class="flex items-center p-3 text-white rounded-lg hover:bg-[#0A6D94] group transition-colors"
+                        routerLinkActive="bg-[#085D7E] font-semibold shadow-inner">
+                        <i class="fas fa-calendar-alt w-5 h-5 text-sky-100"></i>
+                        <span class="ml-3 font-medium">Leave Requests</span>
+                        <span *ngIf="pendingRequestsCount > 0"
+                            class="ml-auto bg-yellow-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                            {{ pendingRequestsCount }}
+                        </span>
+                    </a>
+                </li>
+                <li *ngIf="hasAdminOrManagerRole()">
+                    <a routerLink="/pages/leaves"
+                        class="flex items-center p-3 text-white rounded-lg hover:bg-[#0A6D94] group transition-colors"
+                        routerLinkActive="bg-[#085D7E] font-semibold shadow-inner">
+                        <i class="fas fa-clock w-5 h-5 text-sky-100"></i>
+                        <span class="ml-3 font-medium">Leave Management</span>
+                    </a>
+                </li>
+                <li *ngIf="hasAdminOrManagerRole()">
+                    <a routerLink="/pages/users"
+                        class="flex items-center p-3 text-white rounded-lg hover:bg-[#0A6D94] group transition-colors"
+                        routerLinkActive="bg-[#085D7E] font-semibold shadow-inner">
+                        <i class="fas fa-users w-5 h-5 text-sky-100"></i>
+                        <span class="ml-3 font-medium">Users</span>
+                    </a>
+                </li>
+                <li *ngIf="hasAdminOrManagerRole()">
+                    <a routerLink="/pages/current-leaves"
+                        class="flex items-center p-3 text-white rounded-lg hover:bg-[#0A6D94] group transition-colors"
+                        routerLinkActive="bg-[#085D7E] font-semibold shadow-inner">
+                        <i class="fas fa-users w-5 h-5 text-sky-100"></i>
+                        <span class="ml-3 font-medium">Current Leaves</span>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+</aside>
