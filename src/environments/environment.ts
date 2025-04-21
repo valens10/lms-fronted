@@ -1,5 +1,7 @@
+export const API_URL = (window as any).__env?.API_URL || 'http://localhost:8080';
+
 export const environment = {
     production: false,
-    apiUrl: 'http://localhost:8080',
+    apiUrl: API_URL,
     version: '1.0.0',
 }; 
