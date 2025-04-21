@@ -1,59 +1,67 @@
-# LeaveManagementFrontend
+# 🖥️ Leave Management System - Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.8.
+This is the frontend of the **Leave Management System (LMS)** developed using **Angular 19**. It allows employees to manage leave applications and enables HR/admins to handle approvals and reporting. This project was built as part of a coding challenge and follows an **AI-first development approach**.
 
-## Development server
+---
 
-To start a local development server, run:
+## 🚀 Features
+
+- 🧑‍💼 Employee Dashboard
+  - View leave balance
+  - View application history & statuses
+  - Apply for leave
+  - Upload supporting documents
+
+- 📝 Leave Application Form
+  - Full-day or half-day selection
+  - Leave type selection (Annual, Sick, Maternity, etc.)
+  - Optional document upload
+
+- ✅ Approval Workflow
+  - Manager/Admin can approve/reject leave
+
+- 📅 Team Calendar
+  - View who’s on leave
+  - Filter by department
+
+- 🔔 Notifications
+  - Leave submitted
+  - Approved/rejected status
+
+- 🔐 Authentication
+  - Google login used as placeholder
+
+---
+
+## 🧰 Tech Stack
+
+- Angular 19
+- TypeScript
+- Tailwind
+- Google OAuth (can be swapped to Microsoft Auth in future(Production))
+- Docker + Docker Compose
+
+---
+
+## 🛠️ Prerequisites
+
+Ensure the following tools are installed:
+
+- [Node.js](https://nodejs.org/en/) (v18 or higher)
+- [Angular CLI](https://angular.io/cli)
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+
+---
+## Locally
+- npm install
+- ng serve
+ or using docker `docker-compose up --build -d`
+ 
+## 📦 Installation (Manual Dev Mode)
+
+Clone the frontend repo:
 
 ```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+git clone https://github.com/valens10/lms-fronted.git
+cd lms-fronted
