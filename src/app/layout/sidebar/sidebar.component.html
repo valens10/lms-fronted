@@ -18,16 +18,17 @@
                     </svg>
                     Dashboard
                 </a>
-                <a routerLink="/pages/leaves" routerLinkActive="bg-blue-500 text-white"
+                <a routerLink="/pages/my-leave-workflows" routerLinkActive="bg-blue-500 text-white"
                     class="flex items-center px-4 py-2 text-sm text-white hover:bg-blue-500 hover:text-white rounded-lg nav-link">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
                         </path>
                     </svg>
                     My Leaves
                 </a>
-                <button type="button"
+
+                <button type="button" *ngIf="hasAdminOrManagerRole()"
                     class="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-blue-500 hover:text-white rounded-lg transition-colors duration-200"
                     (click)="toggleDropdown('leave')">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +43,6 @@
                     </svg>
                 </button>
                 <div class="pl-4 space-y-1 dropdown-content" [class.show]="isDropdownOpen('leave')">
-
                     <a routerLink="/pages/leave-requests" routerLinkActive="bg-blue-500 text-white"
                         class="flex items-center px-4 py-2 text-sm text-white hover:bg-blue-500 hover:text-white rounded-lg nav-link">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +50,11 @@
                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
                             </path>
                         </svg>
-                        Leave Requests
+                        Leave Requests <span
+                            class="text-xs ml-2 border border-red-300 bg-red-100 font-semibold text-red-700 rounded-full px-2 py-1">
+                            {{pendingRequestsCount}}
+                        </span>
+
                     </a>
                     <a routerLink="/pages/current-leaves" routerLinkActive="bg-blue-500 text-white"
                         class="flex items-center px-4 py-2 text-sm text-white hover:bg-blue-500 hover:text-white rounded-lg nav-link">
@@ -60,20 +64,12 @@
                         </svg>
                         Current Leaves
                     </a>
-                    <a routerLink="/pages/my-leave-workflows" routerLinkActive="bg-blue-500 text-white"
-                        class="flex items-center px-4 py-2 text-sm text-white hover:bg-blue-500 hover:text-white rounded-lg nav-link">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
-                            </path>
-                        </svg>
-                        My Workflows
-                    </a>
+
                 </div>
             </div>
 
             <!-- Reports Group -->
-            <div class="space-y-1">
+            <div class="space-y-1" *ngIf="hasAdminOrManagerRole()">
                 <button type="button"
                     class="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-blue-500 hover:text-white rounded-lg transition-colors duration-200"
                     (click)="toggleDropdown('reports')">
@@ -130,6 +126,15 @@
                     </svg>
                 </button>
                 <div class="pl-4 space-y-1 dropdown-content" [class.show]="isDropdownOpen('admin')">
+                    <a routerLink="/pages/leaves" routerLinkActive="bg-blue-500 text-white"
+                        class="flex items-center px-4 py-2 text-sm text-white hover:bg-blue-500 hover:text-white rounded-lg nav-link">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        Leaves
+                    </a>
                     <a routerLink="/pages/users" routerLinkActive="bg-blue-500 text-white"
                         class="flex items-center px-4 py-2 text-sm text-white hover:bg-blue-500 hover:text-white rounded-lg nav-link">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

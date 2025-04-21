@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewContainerRef, OnDestroy } from '@angular/core';
 import { CalendarOptions, EventInput, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -6,9 +6,11 @@ import multiMonthPlugin from '@fullcalendar/multimonth';
 import interactionPlugin from '@fullcalendar/interaction';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CommonModule } from '@angular/common';
-import { FormsModule, NgForm } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { LeaveBalanceService } from '../services/leave-balance.service';
 import Swal from 'sweetalert2';
+import { LeaveRequestDialogComponent } from './leave-request-dialog/leave-request-dialog.component';
+import { ComponentRef } from '@angular/core';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,12 +19,11 @@ import Swal from 'sweetalert2';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('dialogContainer', { read: ViewContainerRef }) dialogContainer!: ViewContainerRef;
+  private dialogComponentRef: ComponentRef<LeaveRequestDialogComponent> | null = null;
   leaveBalances: any = {};
   leaves: any[] = [];
-  showLeaveDialog: boolean = false;
-  selectedStartDate: string = '';
   selectedLeave: any = null;
   showLeaveDetails: boolean = false;
   pendingRequestsCount: number = 0;
@@ -56,12 +57,33 @@ export class DashboardComponent implements OnInit {
     dayCellClassNames: (arg) => {
       const classes = [];
       if (arg.isToday) {
-        classes.push('bg-blue-50');
+        classes.push('bg-blue-100', 'font-bold', 'text-blue-800', 'ring-2', 'ring-blue-600', 'ring-offset-2');
       }
       if (arg['isWeekend']) {
         classes.push('bg-gray-50');
       }
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const cellDate = new Date(arg.date);
+      cellDate.setHours(0, 0, 0, 0);
+      if (cellDate < today) {
+        classes.push('text-gray-400', 'cursor-not-allowed');
+      }
       return classes;
+    },
+    selectAllow: (selectInfo) => {
+      const date = new Date(selectInfo.start);
+      const today = new Date();
+      // Reset both dates to midnight
+      date.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      const isHoliday = this.holidays.some(holiday =>
+        new Date(holiday.date).toISOString().split('T')[0] === selectInfo.startStr
+      );
+      const isPastDate = date < today;
+      return !isWeekend && !isHoliday && !isPastDate;
     }
   };
 
@@ -74,10 +96,26 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadLeaveBalances();
-    this.loadPendingRequestsCount();
+
     this.loadLeaves();
     this.loadHolidays();
     this.checkUserRole();
+
+    // Check if user is admin or manager
+    if (this.isAdminOrManager) {
+      this.loadPendingRequestsCount();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.cleanupDialog();
+  }
+
+  private cleanupDialog(): void {
+    if (this.dialogComponentRef) {
+      this.dialogComponentRef.destroy();
+      this.dialogComponentRef = null;
+    }
   }
 
   loadLeaveBalances(): void {
@@ -138,7 +176,8 @@ export class DashboardComponent implements OnInit {
       allDay: true,
       backgroundColor: '#F59E0B',
       borderColor: '#F59E0B',
-      textColor: '#000000'
+      textColor: '#000000',
+      classNames: ['holiday-event']
     }));
 
     // Combine all events
@@ -162,16 +201,33 @@ export class DashboardComponent implements OnInit {
 
   handleDateClick(arg: { dateStr: string }): void {
     const clickedDate = new Date(arg.dateStr);
+    const today = new Date();
+    // Reset both dates to midnight
+    clickedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
     const isWeekend = clickedDate.getDay() === 0 || clickedDate.getDay() === 6;
     const isHoliday = this.holidays.some(holiday =>
       new Date(holiday.date).toISOString().split('T')[0] === arg.dateStr
     );
+    const isPastDate = clickedDate < today;
+
+    if (isPastDate) {
+      Swal.fire({
+        title: 'Not Allowed',
+        text: 'Cannot request leave for past dates',
+        icon: 'warning',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
 
     if (isWeekend) {
       Swal.fire({
         title: 'Not Allowed',
         text: 'Cannot request leave for weekends',
-        icon: 'warning'
+        icon: 'warning',
+        confirmButtonColor: '#3b82f6'
       });
       return;
     }
@@ -180,52 +236,36 @@ export class DashboardComponent implements OnInit {
       Swal.fire({
         title: 'Not Allowed',
         text: 'Cannot request leave for holidays',
-        icon: 'warning'
+        icon: 'warning',
+        confirmButtonColor: '#3b82f6'
       });
       return;
     }
 
-    this.selectedStartDate = arg.dateStr;
-    this.showLeaveDialog = true;
+    this.openLeaveRequestDialog(arg.dateStr);
   }
 
   handleEventClick(arg: EventClickArg): void {
+    if (arg.event.id?.startsWith('holiday-')) {
+      return;
+    }
+
     this.selectedLeave = arg.event.extendedProps['leave'];
     this.showLeaveDetails = true;
   }
 
-  openLeaveRequestDialog(): void {
-    this.selectedStartDate = '';
-    this.showLeaveDialog = true;
-  }
+  openLeaveRequestDialog(selectedDate?: string): void {
+    this.cleanupDialog();
 
-  onLeaveDialogClose(): void {
-    this.showLeaveDialog = false;
-  }
-
-  onLeaveDialogSubmit(form: NgForm): void {
-    if (form.valid) {
-      const formData = form.value;
-      this.leaveBalanceService.requestLeave(formData).subscribe({
-        next: () => {
-          this.showLeaveDialog = false;
-          this.loadLeaves();
-          this.loadLeaveBalances();
-          form.reset();
-          Swal.fire({
-            title: 'Success',
-            text: 'Leave requested successfully',
-            icon: 'success'
-          });
-        },
-        error: (error) => {
-          console.error('Error submitting leave request:', error);
-          Swal.fire({
-            title: 'Error',
-            text: 'Error requesting leave',
-            icon: 'error'
-          });
-        }
+    if (this.dialogContainer) {
+      this.dialogComponentRef = this.dialogContainer.createComponent(LeaveRequestDialogComponent);
+      if (selectedDate) {
+        this.dialogComponentRef.instance.selectedDate = selectedDate;
+      }
+      this.dialogComponentRef.instance.dialogClosed.subscribe(() => {
+        this.cleanupDialog();
+        this.loadLeaves();
+        this.loadLeaveBalances();
       });
     }
   }
@@ -255,12 +295,17 @@ export class DashboardComponent implements OnInit {
           this.loadLeaveBalances();
           Swal.fire({
             title: 'Success',
-            text: 'Leave deleted successfully',
+            text: 'Leave request deleted successfully',
             icon: 'success'
           });
         },
-        error: (error: any) => {
+        error: (error) => {
           console.error('Error deleting leave:', error);
+          Swal.fire({
+            title: 'Error',
+            text: 'Error deleting leave request',
+            icon: 'error'
+          });
         }
       });
     }
@@ -268,11 +313,11 @@ export class DashboardComponent implements OnInit {
 
   viewAttachment(): void {
     if (this.selectedLeave?.attachment) {
-      this.leaveBalanceService.viewLeaveAttachment(this.selectedLeave.attachment);
+      this.leaveBalanceService.viewLeaveAttachment(this.selectedLeave?.attachment)
     }
   }
 
   checkUserRole(): void {
-    // Implementation of checkUserRole method
+    this.isAdminOrManager = this.user.roles?.some((role: string) => ['ROLE_ADMIN', 'ROLE_MANAGER'].includes(role));
   }
 } 

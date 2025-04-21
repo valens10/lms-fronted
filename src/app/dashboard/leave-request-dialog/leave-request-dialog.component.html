@@ -1,0 +1,150 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
+        <div class="flex justify-between items-center px-6 py-4 border-b">
+            <h2 class="text-xl font-semibold text-gray-800">Create Leave Request</h2>
+            <button (click)="onCancel()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <form [formGroup]="leaveRequestForm" class="p-6 space-y-4">
+            <div class="flex justify-between items-start gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
+                    <select formControlName="leaveTypeId" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="" disabled selected>Select Leave Type</option>
+                        <option *ngFor="let type of leaveTypes" [value]="type.id">
+                            {{type.name}}
+                        </option>
+                    </select>
+                    <div *ngIf="leaveRequestForm.get('leaveTypeId')?.hasError('required') && leaveRequestForm.get('leaveTypeId')?.touched"
+                        class="mt-1 text-xs text-red-600">
+                        Leave type is required
+                    </div>
+                </div>
+
+                <div class="flex items-center pt-6">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" formControlName="isHalfDay"
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Half Day</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Start Date -->
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input id="startDate" type="date" formControlName="startDate" [min]="today" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+                    <div *ngIf="leaveRequestForm.get('startDate')?.hasError('required') && leaveRequestForm.get('startDate')?.touched"
+                        class="mt-1 text-xs text-red-600">
+                        Start date is required.
+                    </div>
+                </div>
+
+                <!-- End Date -->
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <input id="endDate" type="date" formControlName="endDate"
+                        [min]="leaveRequestForm.get('startDate')?.value || today" [disabled]="isHalfDay" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white disabled:bg-gray-100 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+                    <div *ngIf="leaveRequestForm.get('endDate')?.hasError('required') && leaveRequestForm.get('endDate')?.touched"
+                        class="mt-1 text-xs text-red-600">
+                        End date is required.
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="bg-blue-50 p-3 rounded-md border border-blue-100">
+                <div class="grid grid-cols-2 gap-1">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Days</p>
+                        <p class="text-base font-semibold text-gray-900">{{totalDays}}</p>
+                    </div>
+                    <div *ngIf="availableBalance > 0 && selectedLeaveType?.isAnnualLeave">
+                        <p class="text-sm font-medium text-gray-600">Available Balance</p>
+                        <p class="text-base font-semibold text-blue-600">{{availableBalance}}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
+                <textarea formControlName="reason" rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    placeholder="Enter reason for leave request"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Attachment</label>
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 flex items-center">
+                        <div
+                            [class]="selectedFile ? 'flex items-center flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-l-md' : 'flex items-center flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md'">
+                            <svg *ngIf="!selectedFile" class="h-5 w-5 text-gray-400 mr-2" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                            <svg *ngIf="selectedFile" class="h-5 w-5 text-gray-400 mr-2" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            <span class="text-sm text-gray-500 truncate">
+                                {{selectedFile?.name || 'No file selected'}}
+                            </span>
+                        </div>
+                        <div *ngIf="selectedFile" class="flex">
+                            <button type="button"
+                                (click)="selectedFile = null; fileInput.value = ''; leaveRequestForm.patchValue({attachment: null})"
+                                class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <svg class="h-4 w-4 text-gray-400 hover:text-gray-500" fill="currentColor"
+                                    viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" (click)="fileInput.click()"
+                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Browse
+                    </button>
+                    <input #fileInput type="file" (change)="onFileSelected($event)" class="hidden"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Supported formats: PDF, DOC, DOCX, JPG, PNG</p>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t">
+                <button type="button" (click)="onCancel()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Cancel
+                </button>
+                <button type="submit" (click)="onSubmit()" [disabled]="!leaveRequestForm.valid"
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span *ngIf="!loading">Submit Request</span>
+                    <div *ngIf="loading" class="ml-2">
+                        <div
+                            class="w-4 h-4 border-t-transparent border-l-transparent border-r-transparent border-b-white rounded-full animate-spin">
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
