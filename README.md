@@ -57,6 +57,9 @@ Ensure the following tools are installed:
 - npm install
 - ng serve
  or using docker `docker-compose up --build -d`
+
+## View application
+- `http://localhost:4200` 
  
 ## 📦 Installation (Manual Dev Mode)
 
